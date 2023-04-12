@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metaphoric Illustrations</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+       <style>
+        #generate_images_button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Metaphoric Illustrations</h1>
+    <form method="POST" action="/">
+        <label for="input_text">Enter a topic:</label>
+        <textarea name="input_text" id="input_text">{{ concept }}</textarea> 
+        <button type="submit">Submit</button>
+    </form>
+        {% if generated_texts %}
+        <h2>Select Generated Text:</h2>
+        <form id="radio_form">
+            {% for text in generated_texts %}
+                <div>
+                    <input type="radio" id="{{ loop.index }}" name="generated_text" value="{{ text }}">
+                    <label for="{{ loop.index }}">{{ text }}</label>
+                </div>
+            {% endfor %}
+        <button type="submit" id="generate_images_button">Generate Images</button>
+        </form>
+    {% endif %}
+    <div id="images_container">
+    </div>
+
+        <script>
+        $("#radio_form").submit(function(event) {
+            event.preventDefault();
+
+            let selectedText = $('input[name="generated_text"]:checked').val();
+            if (!selectedText) {
+                alert("Please select a generated text.");
+                return;
+            }
+
+            $.ajax({
+                url: "/generate_images",
+                method: "POST",
+                data: { selected_text: selectedText },
+                success: function(imageUrls) {
+                    $("#images_container").empty();
+                    imageUrls = JSON.parse(imageUrls);
+                    for (let imageUrl of imageUrls) {
+                        let img = $("<img>").attr("src", imageUrl);
+                        $("#images_container").append(img);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert("Failed to generate images. Error: " + xhr.responseText);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
